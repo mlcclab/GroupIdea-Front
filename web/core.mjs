@@ -99,3 +99,5 @@ export function validateIndex(index) {
 }
 export const dateLabel = value => new Intl.DateTimeFormat('zh-CN',{timeZone:'Asia/Shanghai', year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(value));
 export const weekLabel = week => `${week.slice(0,4)} 年 · 第 ${Number(week.slice(-2))} 周`;
+export const roleLabel = role => ({admin:'PI', pi:'PI', graduate:'研究生', student:'研究生', postdoc:'博士后'}[role] || '成员');
+export const displayAuthor = item => `${item.displayName || item.author || '未署名'}（${roleLabel(item.role)}）`;
