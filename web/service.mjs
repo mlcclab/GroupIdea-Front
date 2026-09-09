@@ -18,14 +18,8 @@ export class GroupIdeaService {
     if(!response.ok) {const error=new Error(data.error || '请求未完成，请稍后重试。');error.status=response.status;throw error;}
     return data;
   }
-  async login(username,password) {
-    const result=await this.request('/api/login',{username,password});
-    this.accessToken=result.token || '';
-    try { if (this.accessToken) window.localStorage?.setItem(this.storageKey,this.accessToken); } catch { /* Storage may be unavailable in private browsing. */ }
-    return result.user;
-  }
-  async guestLogin() {
-    const result=await this.request('/api/guest-login',{});
+  async login(username,password,role='member') {
+    const result=await this.request('/api/login',{username,password,role});
     this.accessToken=result.token || '';
     try { if (this.accessToken) window.localStorage?.setItem(this.storageKey,this.accessToken); } catch { /* Storage may be unavailable in private browsing. */ }
     return result.user;
