@@ -24,6 +24,12 @@ export class GroupIdeaService {
     try { if (this.accessToken) window.localStorage?.setItem(this.storageKey,this.accessToken); } catch { /* Storage may be unavailable in private browsing. */ }
     return result.user;
   }
+  async guestLogin() {
+    const result=await this.request('/api/guest-login',{});
+    this.accessToken=result.token || '';
+    try { if (this.accessToken) window.localStorage?.setItem(this.storageKey,this.accessToken); } catch { /* Storage may be unavailable in private browsing. */ }
+    return result.user;
+  }
   async me() { return (await this.request('/api/me')).user; }
   clearSession() { this.accessToken=''; try { window.localStorage?.removeItem(this.storageKey); } catch { /* Storage may be unavailable. */ } }
   async logout() { try { return await this.request('/api/logout',{}); } finally { this.clearSession(); } }
