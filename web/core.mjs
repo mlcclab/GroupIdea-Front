@@ -66,15 +66,12 @@ export function validDate(value) {
   const date = new Date(`${value}T00:00:00Z`);
   return date.toISOString().slice(0,10) === value;
 }
-export function currentDate(now = new Date()) {
-  return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).format(now);
-}
 export function makeReport({user, title, recordDate, week, filename, content}, now = new Date(), id = crypto.randomUUID()) {
   validateUpload(filename, content);
   if (!title.trim() || title.trim().length > 100) throw new Error('请填写 1–100 字的标题。');
   if (recordDate ? !validDate(recordDate) : (week ? !validWeek(week) : false)) throw new Error(recordDate ? '请选择有效的记录日期。' : '请选择有效的报告周，例如 2026-W37。');
   if (!Number.isSafeInteger(user.id) || user.id < 1 || !/^[a-z\d_-]+$/i.test(user.login)) throw new Error('用户身份无效，请重新登录。');
-  return {version:1, id, title:title.trim(), ...(recordDate ? {recordDate} : week ? {week} : {recordDate:currentDate(now)}), filename, author:user.login, authorId:user.id, displayName:user.name || user.login, role:user.role, submittedAt:now.toISOString(), content};
+  return {version:1, id, title:title.trim(), ...(recordDate ? {recordDate} : week ? {week} : {}), filename, author:user.login, authorId:user.id, displayName:user.name || user.login, role:user.role, submittedAt:now.toISOString(), content};
 }
 export function reportPath(report) {
   const stamp = report.submittedAt.replace(/[:.]/g,'');
