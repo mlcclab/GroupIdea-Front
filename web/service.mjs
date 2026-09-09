@@ -2,8 +2,8 @@ export class GroupIdeaService {
   constructor() {
     const configured = window.GROUPIDEA_CONFIG?.apiBase || '';
     this.base = configured.replace(/\/$/, '');
-    // 令牌只保留在当前页面内存中；刷新页面后重新登录。
-    this.accessToken = '';
+    this.storageKey = 'groupidea.session.token';
+    try { this.accessToken = window.localStorage?.getItem(this.storageKey) || ''; } catch { this.accessToken = ''; }
   }
   async request(path,body) {
     let response;
@@ -21,9 +21,12 @@ export class GroupIdeaService {
   async login(username,password) {
     const result=await this.request('/api/login',{username,password});
     this.accessToken=result.token || '';
+    try { if (this.accessToken) window.localStorage?.setItem(this.storageKey,this.accessToken); } catch { /* Storage may be unavailable in private browsing. */ }
     return result.user;
   }
-  async logout() { try { return await this.request('/api/logout',{}); } finally { this.accessToken=''; } }
+  async me() { return (await this.request('/api/me')).user; }
+  clearSession() { this.accessToken=''; try { window.localStorage?.removeItem(this.storageKey); } catch { /* Storage may be unavailable. */ } }
+  async logout() { try { return await this.request('/api/logout',{}); } finally { this.clearSession(); } }
   async listReports() {return (await this.request('/api/reports')).sort((a,b)=>b.name.localeCompare(a.name));}
   async readReport(path) {return this.request('/api/report?path='+encodeURIComponent(path));}
   async published() {return this.request('/api/published');}
