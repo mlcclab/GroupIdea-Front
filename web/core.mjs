@@ -61,16 +61,21 @@ export function contentPath(path) {
   if (typeof path !== 'string' || !path || path.startsWith('/') || /[\\\x00-\x1f]/.test(path) || path.split('/').some(p => !p || p === '.' || p === '..')) throw new Error('文件路径无效。');
   return path.split('/').map(encodeURIComponent).join('/');
 }
-export function makeReport({user, title, week, filename, content}, now = new Date(), id = crypto.randomUUID()) {
+export function validDate(value) {
+  if (!/^20\d{2}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return date.toISOString().slice(0,10) === value;
+}
+export function makeReport({user, title, recordDate, week, filename, content}, now = new Date(), id = crypto.randomUUID()) {
   validateUpload(filename, content);
   if (!title.trim() || title.trim().length > 100) throw new Error('请填写 1–100 字的标题。');
-  if (!validWeek(week)) throw new Error('请选择有效的报告周，例如 2026-W37。');
+  if (recordDate ? !validDate(recordDate) : !validWeek(week)) throw new Error(recordDate ? '请选择有效的记录日期。' : '请选择有效的报告周，例如 2026-W37。');
   if (!Number.isSafeInteger(user.id) || user.id < 1 || !/^[a-z\d_-]+$/i.test(user.login)) throw new Error('用户身份无效，请重新登录。');
-  return {version:1, id, title:title.trim(), week, filename, author:user.login, authorId:user.id, displayName:user.name || user.login, submittedAt:now.toISOString(), content};
+  return {version:1, id, title:title.trim(), ...(recordDate ? {recordDate} : {week}), filename, author:user.login, authorId:user.id, displayName:user.name || user.login, role:user.role, submittedAt:now.toISOString(), content};
 }
 export function reportPath(report) {
   const stamp = report.submittedAt.replace(/[:.]/g,'');
-  return `submissions/${report.authorId}/${report.week}__${stamp}__${report.id}.md`;
+  return `submissions/${report.authorId}/${report.recordDate || report.week}__${stamp}__${report.id}.md`;
 }
 export function packReport(report) {
   const {content, ...metadata} = report;
@@ -81,8 +86,8 @@ export function unpackReport(text) {
   if (!match) throw new Error('这不是 GroupIdea 提交记录。');
   const meta = JSON.parse(decode64(match[1]));
   const content = text.slice(match[0].length);
-  if (meta.version !== 1 || typeof meta.title !== 'string' || typeof meta.author !== 'string' || !Number.isSafeInteger(meta.authorId) || !validWeek(meta.week) || !Number.isFinite(Date.parse(meta.submittedAt)) || typeof meta.filename !== 'string') throw new Error('提交记录的信息不完整。');
-  return {...meta, content};
+  if (meta.version !== 1 || typeof meta.title !== 'string' || typeof meta.author !== 'string' || !Number.isSafeInteger(meta.authorId) || (!meta.recordDate && !validWeek(meta.week)) || (meta.recordDate && !validDate(meta.recordDate)) || !Number.isFinite(Date.parse(meta.submittedAt)) || typeof meta.filename !== 'string') throw new Error('提交记录的信息不完整。');
+  return {...meta, role: meta.role, content};
 }
 export function validateIndex(index) {
   if (index?.version !== 1 || !Array.isArray(index.posts)) throw new Error('总结索引格式不正确，请管理员重新生成。');

@@ -29,7 +29,7 @@ export class GroupIdeaService {
   async published() {return this.request('/api/published');}
   async file(path) {return (await this.request('/api/published/content?path='+encodeURIComponent(path))).content;}
   async submit(report) {
-    const {id,title,week,filename,content}=report;
-    return this.request('/api/reports',{id,title,week,filename,content});
+    const {id,title,recordDate,week,filename,content}=report;
+    return this.request('/api/reports',{id,title,recordDate,week,filename,content});
   }
 }
